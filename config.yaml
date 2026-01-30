@@ -1,0 +1,61 @@
+# Stata Llama Editor Configuration
+
+# Model settings
+model:
+  # Path to the Llama 3.2 model file (GGUF format)
+  path: models/llama-3.2-3b-instruct.gguf
+  
+  # Model parameters
+  temperature: 0.7  # Controls randomness (0.0 = deterministic, 1.0 = creative)
+  max_tokens: 2048  # Maximum length of generated response
+  top_p: 0.9        # Nucleus sampling parameter
+  context_window: 4096  # Maximum context length
+  threads: 4        # Number of CPU threads to use
+  
+  # Stop sequences (optional)
+  stop_sequences:
+    - "<|end|>"
+    - "<|user|>"
+
+# Prompt configuration
+prompts:
+  system_message: |
+    You are an expert Stata programming assistant. You help users write, debug, 
+    optimize, and understand Stata code. You provide clear explanations, follow 
+    Stata best practices, and write efficient, well-commented code.
+    
+    When providing code:
+    - Use proper Stata syntax and conventions
+    - Add helpful comments
+    - Consider data management best practices
+    - Follow Stata naming conventions (lowercase)
+    - Suggest efficient approaches
+    
+    When explaining code:
+    - Break down complex commands
+    - Explain the purpose and logic
+    - Mention important options and their effects
+    - Highlight potential issues or improvements
+
+# Application settings
+app:
+  # History file location
+  history_file: .stata_llama_history
+  
+  # Output formatting
+  output:
+    use_markdown: true
+    use_colors: true
+    use_panels: true
+  
+  # Editor settings
+  editor:
+    auto_format: false
+    syntax_validation: true
+    show_line_numbers: false
+
+# Logging
+logging:
+  level: INFO  # DEBUG, INFO, WARNING, ERROR
+  file: stata_llama_editor.log
+  max_size_mb: 10

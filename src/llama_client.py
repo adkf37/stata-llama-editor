@@ -1,23 +1,22 @@
 """
 Llama Client Module
-Handles interaction with the Llama 3.2 model
+Handles interaction with the Llama 3.2 model via Ollama
 """
 
 import os
-from pathlib import Path
 from typing import Optional, Dict, Any
 import yaml
 
 
 class LlamaClient:
-    """Client for interacting with Llama 3.2 model"""
+    """Client for interacting with Llama 3.2 model via Ollama"""
     
     def __init__(self, config_path: str = "config.yaml"):
         """Initialize the Llama client with configuration"""
         self.config = self._load_config(config_path)
-        self.model = None
-        self.model_path = self.config.get('model', {}).get('path')
-        self._initialize_model()
+        self.model_name = self.config.get('model', {}).get('name', 'llama3.2')
+        self.ollama_host = self.config.get('model', {}).get('host', 'http://localhost:11434')
+        self._initialize_ollama()
     
     def _load_config(self, config_path: str) -> Dict[str, Any]:
         """Load configuration from YAML file"""
@@ -28,43 +27,47 @@ class LlamaClient:
             # Return default config if file doesn't exist
             return {
                 'model': {
-                    'path': 'models/llama-3.2-3b-instruct.gguf',
+                    'name': 'llama3.2',
+                    'host': 'http://localhost:11434',
                     'temperature': 0.7,
                     'max_tokens': 2048,
-                    'top_p': 0.9,
-                    'context_window': 4096
+                    'top_p': 0.9
                 }
             }
     
-    def _initialize_model(self):
-        """Initialize the Llama model"""
+    def _initialize_ollama(self):
+        """Initialize connection to Ollama"""
         try:
-            from llama_cpp import Llama
+            import ollama
+            self.client = ollama.Client(host=self.ollama_host)
             
-            model_config = self.config.get('model', {})
-            
-            # Check if model file exists
-            if not os.path.exists(self.model_path):
-                raise FileNotFoundError(
-                    f"Model file not found: {self.model_path}\n"
-                    f"Please download the Llama 3.2 model and place it in the models/ directory.\n"
-                    f"See models/README.md for instructions."
-                )
-            
-            self.model = Llama(
-                model_path=self.model_path,
-                n_ctx=model_config.get('context_window', 4096),
-                n_threads=model_config.get('threads', 4),
-                verbose=False
-            )
-            
+            # Test connection by listing models
+            try:
+                models_response = self.client.list()
+                if hasattr(models_response, 'models'):
+                    model_names = [model.model for model in models_response.models]
+                else:
+                    model_names = []
+                
+                # Check if requested model is available
+                if model_names and not any(self.model_name in name for name in model_names):
+                    print(f"Warning: Model '{self.model_name}' not found in Ollama.")
+                    print(f"Available models: {', '.join(model_names)}")
+                    print(f"Run: ollama pull {self.model_name}")
+            except Exception as e:
+                # Silently ignore - model verification is optional
+                pass
+                
         except ImportError:
             raise ImportError(
-                "llama-cpp-python is not installed. "
-                "Please run: pip install llama-cpp-python"
+                "ollama package is not installed. "
+                "Please run: pip install ollama"
             )
         except Exception as e:
-            raise RuntimeError(f"Failed to initialize Llama model: {str(e)}")
+            raise RuntimeError(
+                f"Failed to connect to Ollama at {self.ollama_host}\n"
+                f"Make sure Ollama is running. Error: {str(e)}"
+            )
     
     def generate(self, prompt: str, **kwargs) -> str:
         """
@@ -77,38 +80,48 @@ class LlamaClient:
         Returns:
             Generated text response
         """
-        if self.model is None:
-            raise RuntimeError("Model not initialized")
-        
         model_config = self.config.get('model', {})
         
+        # Get system message
+        system_message = self.config.get('prompts', {}).get('system_message', '')
+        
+        # Build messages
+        messages = []
+        if system_message:
+            messages.append({
+                'role': 'system',
+                'content': system_message
+            })
+        messages.append({
+            'role': 'user',
+            'content': prompt
+        })
+        
         # Merge default config with kwargs
-        generation_params = {
-            'temperature': model_config.get('temperature', 0.7),
-            'max_tokens': model_config.get('max_tokens', 2048),
-            'top_p': model_config.get('top_p', 0.9),
-            'stop': model_config.get('stop_sequences', []),
-            **kwargs
+        options = {
+            'temperature': kwargs.get('temperature', model_config.get('temperature', 0.7)),
+            'num_predict': kwargs.get('max_tokens', model_config.get('max_tokens', 2048)),
+            'top_p': kwargs.get('top_p', model_config.get('top_p', 0.9)),
         }
         
-        # Format prompt with system message
-        system_message = self.config.get('prompts', {}).get('system_message', '')
-        formatted_prompt = self._format_prompt(prompt, system_message)
+        # Add stop sequences if provided
+        stop_sequences = model_config.get('stop_sequences', [])
+        if stop_sequences:
+            options['stop'] = stop_sequences
         
-        # Generate response
-        response = self.model(
-            formatted_prompt,
-            **generation_params
-        )
-        
-        # Extract text from response
-        return response['choices'][0]['text'].strip()
-    
-    def _format_prompt(self, user_prompt: str, system_message: str) -> str:
-        """Format the prompt with system message"""
-        if system_message:
-            return f"<|system|>\n{system_message}\n<|user|>\n{user_prompt}\n<|assistant|>\n"
-        return user_prompt
+        try:
+            # Generate response
+            response = self.client.chat(
+                model=self.model_name,
+                messages=messages,
+                options=options,
+                stream=False
+            )
+            
+            return response['message']['content'].strip()
+            
+        except Exception as e:
+            raise RuntimeError(f"Failed to generate response: {str(e)}")
     
     def stream_generate(self, prompt: str, **kwargs):
         """
@@ -121,24 +134,42 @@ class LlamaClient:
         Yields:
             Chunks of generated text
         """
-        if self.model is None:
-            raise RuntimeError("Model not initialized")
-        
         model_config = self.config.get('model', {})
         
-        generation_params = {
-            'temperature': model_config.get('temperature', 0.7),
-            'max_tokens': model_config.get('max_tokens', 2048),
-            'top_p': model_config.get('top_p', 0.9),
-            'stream': True,
-            **kwargs
+        # Get system message
+        system_message = self.config.get('prompts', {}).get('system_message', '')
+        
+        # Build messages
+        messages = []
+        if system_message:
+            messages.append({
+                'role': 'system',
+                'content': system_message
+            })
+        messages.append({
+            'role': 'user',
+            'content': prompt
+        })
+        
+        # Merge default config with kwargs
+        options = {
+            'temperature': kwargs.get('temperature', model_config.get('temperature', 0.7)),
+            'num_predict': kwargs.get('max_tokens', model_config.get('max_tokens', 2048)),
+            'top_p': kwargs.get('top_p', model_config.get('top_p', 0.9)),
         }
         
-        system_message = self.config.get('prompts', {}).get('system_message', '')
-        formatted_prompt = self._format_prompt(prompt, system_message)
-        
-        for chunk in self.model(formatted_prompt, **generation_params):
-            if 'choices' in chunk and len(chunk['choices']) > 0:
-                text = chunk['choices'][0].get('text', '')
-                if text:
-                    yield text
+        try:
+            # Generate streaming response
+            stream = self.client.chat(
+                model=self.model_name,
+                messages=messages,
+                options=options,
+                stream=True
+            )
+            
+            for chunk in stream:
+                if 'message' in chunk and 'content' in chunk['message']:
+                    yield chunk['message']['content']
+                    
+        except Exception as e:
+            raise RuntimeError(f"Failed to generate streaming response: {str(e)}")

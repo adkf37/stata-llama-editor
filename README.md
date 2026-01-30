@@ -17,25 +17,30 @@ This project provides an intelligent code editor and assistant for Stata program
 ## Requirements
 
 - Python 3.8 or higher
+- Ollama installed and running
 - At least 8GB RAM (16GB recommended for better performance)
-- Sufficient disk space for the Llama 3.2 model (~4-8GB depending on variant)
 
 ## Installation
 
-1. Clone this repository:
+1. Install Ollama:
+   - Visit https://ollama.ai and download Ollama for your platform
+   - Install and start Ollama
+
+2. Pull the Llama 3.2 model:
+```bash
+ollama pull llama3.2
+```
+
+3. Clone this repository:
 ```bash
 git clone <repository-url>
 cd stata-llama-editor
 ```
 
-2. Install dependencies:
+4. Install Python dependencies:
 ```bash
 pip install -r requirements.txt
 ```
-
-3. Download the Llama 3.2 model:
-   - Follow instructions in `models/README.md` to download the appropriate model files
-   - Place model files in the `models/` directory
 
 ## Usage
 

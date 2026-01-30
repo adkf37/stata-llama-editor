@@ -1,53 +1,47 @@
-# Model Files
+# Models (Ollama)
 
-This directory should contain the Llama 3.2 model files in GGUF format.
+This project now uses **Ollama** for model management. No model files need to be stored in this directory.
 
-## Downloading the Model
+## Setup
 
-You have several options to download the Llama 3.2 model:
+### 1. Install Ollama
 
-### Option 1: Using Hugging Face
+If you haven't already:
+- Visit: https://ollama.ai
+- Download and install Ollama for your platform
 
-1. Install the Hugging Face CLI:
+### 2. Pull Llama 3.2
+
+Run one of these commands to download the model:
+
 ```bash
-pip install huggingface-hub
+# Standard Llama 3.2 (3B parameters)
+ollama pull llama3.2
+
+# Or specific size variants
+ollama pull llama3.2:1b   # Smaller, faster
+ollama pull llama3.2:3b   # Balanced (default)
 ```
 
-2. Download a quantized GGUF model (recommended for local use):
+### 3. Verify Installation
+
+Check that Ollama is running and models are available:
+
 ```bash
-huggingface-cli download TheBloke/Llama-3.2-3B-Instruct-GGUF llama-3.2-3b-instruct.Q4_K_M.gguf --local-dir ./models --local-dir-use-symlinks False
+# List installed models
+ollama list
+
+# Test the model
+ollama run llama3.2 "Hello"
 ```
-
-### Option 2: Manual Download
-
-1. Visit the Hugging Face model repository:
-   - For 3B model: https://huggingface.co/TheBloke/Llama-3.2-3B-Instruct-GGUF
-   - For 1B model (lighter): https://huggingface.co/TheBloke/Llama-3.2-1B-Instruct-GGUF
-
-2. Download the GGUF file (recommended: Q4_K_M quantization for balance of size and quality)
-
-3. Place the downloaded `.gguf` file in this directory
-
-### Option 3: Using llama.cpp
-
-If you prefer to quantize the model yourself:
-
-1. Clone llama.cpp: https://github.com/ggerganov/llama.cpp
-2. Follow their instructions to convert and quantize the model
-3. Copy the resulting `.gguf` file to this directory
-
-## Recommended Models
-
-- **llama-3.2-3b-instruct.Q4_K_M.gguf** (~2.2GB) - Good balance of size and performance
-- **llama-3.2-3b-instruct.Q5_K_M.gguf** (~2.7GB) - Higher quality, slightly larger
-- **llama-3.2-1b-instruct.Q4_K_M.gguf** (~0.7GB) - Faster but less capable
 
 ## Configuration
 
-After downloading, update the model path in `config.yaml` if needed:
+Update `config.yaml` to use your preferred model:
 
 ```yaml
 model:
+  name: llama3.2  # Or llama3.2:1b, llama3.2:3b, etc.
   path: models/your-model-file-name.gguf
 ```
 

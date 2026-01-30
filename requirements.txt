@@ -1,11 +1,5 @@
-# Core dependencies for Llama 3.2
-llama-cpp-python>=0.2.0
-transformers>=4.35.0
-torch>=2.0.0
-
-# For model loading and inference
-huggingface-hub>=0.19.0
-accelerate>=0.24.0
+# Core dependencies for Llama 3.2 via Ollama
+ollama>=0.1.0
 
 # CLI and interface
 click>=8.1.0

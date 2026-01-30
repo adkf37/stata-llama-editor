@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stata Llama Editor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🦙 Stata Llama Editor</h1>
+            <p class="subtitle">AI-Powered Stata Code Assistant</p>
+        </header>
+
+        <div class="chat-container" id="chatContainer">
+            <div class="welcome-message">
+                <h2>Welcome! 👋</h2>
+                <p>I'm your Stata programming assistant powered by Llama 3.2.</p>
+                <div class="command-grid">
+                    <button class="command-btn" onclick="showCommandHelp('explain')">
+                        📖 Explain Code
+                    </button>
+                    <button class="command-btn" onclick="showCommandHelp('fix')">
+                        🔧 Debug & Fix
+                    </button>
+                    <button class="command-btn" onclick="showCommandHelp('optimize')">
+                        ⚡ Optimize Code
+                    </button>
+                    <button class="command-btn" onclick="showCommandHelp('general')">
+                        💬 Ask Questions
+                    </button>
+                </div>
+                <p class="tip">Type your Stata code or questions below to get started!</p>
+            </div>
+        </div>
+
+        <div class="input-container">
+            <div class="command-buttons">
+                <button class="cmd-btn" onclick="insertCommand('/explain ')" title="Explain code">📖</button>
+                <button class="cmd-btn" onclick="insertCommand('/fix ')" title="Fix code">🔧</button>
+                <button class="cmd-btn" onclick="insertCommand('/optimize ')" title="Optimize code">⚡</button>
+            </div>
+            <textarea 
+                id="userInput" 
+                placeholder="Type your Stata code or questions here... (Shift+Enter for new line, Enter to send)"
+                rows="3"
+            ></textarea>
+            <button id="sendBtn" onclick="sendMessage()">
+                <span id="sendBtnText">Send</span>
+                <span id="sendBtnSpinner" class="spinner" style="display: none;"></span>
+            </button>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

@@ -44,17 +44,35 @@ pip install -r requirements.txt
 
 ## Usage
 
-Run the editor/bot:
+### Web Interface (Recommended)
+
+Run the web application:
+```bash
+python src/app.py
+```
+
+Then open your browser to: **http://localhost:5000**
+
+Features:
+- 💬 Interactive chat interface
+- 🔄 Real-time streaming responses
+- 📖 Quick command buttons (/explain, /fix, /optimize)
+- 🎨 Modern, responsive design
+
+### Command Line Interface
+
+Run the CLI version:
 ```bash
 python src/main.py
 ```
 
-### Basic Commands
+### Available Commands
 
 - Type your Stata code or questions
 - Use `/help` for available commands
 - Use `/explain <code>` to get explanations
 - Use `/fix <code>` to get debugging assistance
+- Use `/optimize <code>` to get optimization suggestions
 
 ## Configuration
 
@@ -74,6 +92,26 @@ stata-llama-editor/
 ├── requirements.txt
 └── README.md
 ```
+
+## Testing
+
+Run comprehensive test suite to evaluate performance:
+
+```bash
+# Run all tests with detailed report
+python tests/run_all_tests.py
+
+# Run evaluation tests only
+python tests/test_evaluation.py
+
+# Run performance benchmarks only
+python tests/test_performance.py
+
+# Run unit tests
+python tests/test_unit.py
+```
+
+Test results are saved as JSON files for analysis.
 
 ## Contributing
 
